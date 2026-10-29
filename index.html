@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>SoundQuest - 多感官音樂猜謎與沉浸式學習系統</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0d0d12;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    #game-container {
+      position: relative;
+    }
+
+    button {
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+      white-space: normal !important;
+      line-height: 1.3 !important;
+      box-sizing: border-box !important;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container"></div>
+
+<script>
+// ----------------------------------------------------
+// 1. 完全對應專案檔案總管的雙層題庫資料庫
+// ----------------------------------------------------
+const quizCategories = {
+  "era_70s_80s": {
+    title: "70-80 年代流行經典與搖滾萌芽",
+    description: "經典抒情與華語搖滾傳奇，刻畫時代的情感記憶！",
+    questions: [
+      {
+        id: 1,
+        difficulty: "★★☆☆☆ 經典熱門",
+        audioMainUrl: "歌單/鄧麗君：月亮代表我的心.mp3",
+        audioChorusUrl: null,
+        allowChorusHint: false,
+        options: ["月亮代表我的心 - 鄧麗君", "甜蜜蜜 - 鄧麗君", "小城故事 - 鄧麗君", "千言萬語 - 鄧麗君"],
+        answer: 0,
+        hintText: "提示：歌曲將遠方的天體比喻為深厚且不變的情意，是傳唱全球的華語名曲。",
+        knowledgeCard: {
+          title: "華語流行樂的跨文化傳播符號",
+          content: "《月亮代表我的心》原由陳芬蘭首唱，後經鄧麗君重新演繹紅遍全球。歌詞巧妙運用『月亮』這種恆定又溫柔的自然意象來象徵永恆不變的情愛。"
+        }
+      },
+      {
+        id: 2,
+        difficulty: "★★★☆☆ 中等挑戰",
+        audioMainUrl: "歌單/王傑：《是否我真的一無所有》前奏.mp3",
+        audioChorusUrl: "歌單/王傑：《是否我真的一無所有》副歌.mp3",
+        allowChorusHint: true,
+        options: ["是否我真的一無所有 - 王傑", "一場遊戲一場夢 - 王傑", "安妮 - 王傑", "英雄淚 - 王傑"],
+        answer: 0,
+        hintText: "提示：由陳志遠編曲、飛碟唱片打造的典型孤傲浪人搖滾曲風。",
+        knowledgeCard: {
+          title: "80 年代浪人搖滾與編曲美學",
+          content: "王傑以獨特的滄桑嗓音與浪人形象席捲樂壇。《是否我真的一無所有》採用了大膽的電吉他與重拍鼓點，完美呈現 80 年代台灣流行搖滾的經典氛圍。"
+        }
+      },
+      {
+        id: 3,
+        difficulty: "★★☆☆☆ 經典熱門",
+        audioMainUrl: "歌單/張雨生：《我的未來不是夢》前奏.mp3",
+        audioChorusUrl: "歌單/張雨生：《我的未來不是夢》副歌.mp3",
+        allowChorusHint: true,
+        options: ["我的未來不是夢 - 張雨生", "天天想你 - 張雨生", "大海 - 張雨生", "帶我去月球 - 張雨生"],
+        answer: 0,
+        hintText: "提示：充滿正能量的勵志經典，歌詞描寫年輕人在都市中拼搏與堅持理想。",
+        knowledgeCard: {
+          title: "廣告歌曲與高亢音域的經典結合",
+          content: "此曲原為黑松沙士廣告曲，張雨生以清亮且極具穿透力的高音一舉成名，歌詞描寫基層青年對未來的認真與堅持，成為激勵數代人的勵志精神代表。"
+        }
+      },
+      {
+        id: 4,
+        difficulty: "★★★☆☆ 中等挑戰",
+        audioMainUrl: "歌單/張雨生：《我期待》前奏.mp3",
+        audioChorusUrl: "歌單/張雨生：《我期待》副歌.mp3",
+        allowChorusHint: true,
+        options: ["我期待 - 張雨生", "口是心非 - 張雨生", "河 - 張雨生", "再見蘭嶼 - 張雨生"],
+        answer: 0,
+        hintText: "提示：歌詞中有『Say Goodbye』與『昂首闊步』，表達對生命的崇高展望。",
+        knowledgeCard: {
+          title: "張雨生的前衛創作與生命哲思",
+          content: "《我期待》展現了張雨生極高闊的跨音域演唱技巧與豐富的前衛搖滾/管弦樂編曲，是一首對生命與夢想表達深邃思考的藝術作品。"
+        }
+      },
+      {
+        id: 5,
+        difficulty: "★★☆☆☆ 經典熱門",
+        audioMainUrl: "歌單/張學友：《祝福》前奏.mp3",
+        audioChorusUrl: "歌單/張學友：《祝福》副歌.mp3",
+        allowChorusHint: true,
+        options: ["祝福 - 張學友", "吻別 - 張學友", "心如刀割 - 張學友", "等到的愛 - 張學友"],
+        answer: 0,
+        hintText: "提示：台灣校園畢業典禮與離別場合必定播放的溫暖金曲。",
+        knowledgeCard: {
+          title: "離別意象與音樂撫慰效果",
+          content: "《祝福》以溫柔舒緩的和絃進行與深情的旋律，打破了傳統離別歌曲的悲傷感，成為華語文化中具有代表性的聚散文化符號。"
+        }
+      },
+      {
+        id: 6,
+        difficulty: "★☆☆☆☆ 神曲必答",
+        audioMainUrl: "歌單/張韶涵 - 隱形的翅膀 前奏.mp3",
+        audioChorusUrl: "歌單/張韶涵 - 隱形的翅膀 副歌.mp3",
+        allowChorusHint: true,
+        options: ["隱形的翅膀 - 張韶涵", "歐若拉 - 張韶涵", "遺失的美好 - 張韶涵", "親愛的那不是愛情 - 張韶涵"],
+        answer: 0,
+        hintText: "提示：歌詞將勇氣比喻為看不見的羽翼，帶領人們飛過絕望。",
+        knowledgeCard: {
+          title: "民謠曲風與勵志隱喻的結合",
+          content: "由王雅君詞曲創作，歌曲將心理韌性具象化為『隱形的翅膀』，不僅紅遍大江南北，更曾被選為作文考試題目。"
+        }
+      }
+    ]
+  },
+  "era_90s_00s": {
+    title: "90-00 年代千禧流行盛世",
+    description: "唱片銷售黃金期與千禧流行金曲，曲風多元且影響深遠！",
+    questions: [
+      {
+        id: 1,
+        difficulty: "★☆☆☆☆ 神曲必答",
+        audioMainUrl: "歌單1/《江南》林俊傑 前奏.mp3",
+        audioChorusUrl: "歌單1/《江南》林俊傑 副歌.mp3",
+        allowChorusHint: true,
+        options: ["江南 - 林俊傑", "一千年以後 - 林俊傑", "曹操 - 林俊傑", "醉赤壁 - 林俊傑"],
+        answer: 0,
+        hintText: "提示：結合中國風洞簫與西洋 R&B 節奏的千禧年代表性神曲。",
+        knowledgeCard: {
+          title: "中國風與西洋 R&B 的跨界融合",
+          content: "《江南》收錄於 2004 年《第二天堂》專輯，林俊傑將古典民族樂器（如洞簫）巧妙融進 R&B 律動，開啟了千禧年代華語樂壇中國風潮流的新篇章。"
+        }
+      },
+      {
+        id: 2,
+        difficulty: "★★☆☆☆ 勵志爆紅",
+        audioMainUrl: "歌單1/《你的答案》阿冗 前奏.mp3",
+        audioChorusUrl: "歌單1/《你的答案》阿冗 副歌.mp3",
+        allowChorusHint: true,
+        options: ["你的答案 - 阿冗", "與我無關 - 阿冗", "少年 - 夢然", "星辰大海 - 黃霄雲"],
+        answer: 0,
+        hintText: "提示：歌詞寫道『黎明前的黑暗，將光芒抓住』，極具爆發力的勵志歌曲。",
+        knowledgeCard: {
+          title: "網路時代的情感共鳴與搖滾聲線",
+          content: "《你的答案》以沙啞且富有力量感的演唱方式，描寫面對困境時堅持尋找自我答案的韌性，成為短影音時代極具現象級影響力的勵志作品。"
+        }
+      },
+      {
+        id: 3,
+        difficulty: "★☆☆☆☆ 神曲必答",
+        audioMainUrl: "歌單1/《忘情水》劉德華前奏.mp3",
+        audioChorusUrl: "歌單1/《忘情水》劉德華副歌.mp3",
+        allowChorusHint: true,
+        options: ["忘情水 - 劉德華", "謝謝你的愛 - 劉德華", "冰雨 - 劉德華", "練習 - 劉德華"],
+        answer: 0,
+        hintText: "提示：四大天王劉德華 1994 年發行的經典名曲，歌詞渴望喝下一杯消除煩惱的水。",
+        knowledgeCard: {
+          title: "90 年代影視連動與通俗流行巔峰",
+          content: "由陳耀川作曲、李安修填詞，《忘情水》旋律朗朗上口且情感真摯，搭配同名影視作品宣傳，奠定了劉德華在華語流行樂壇無可撼動的天王地位。"
+        }
+      },
+      {
+        id: 4,
+        difficulty: "★★☆☆☆ 情歌經典",
+        audioMainUrl: "歌單1/《过火》张信哲 前奏.mp3",
+        audioChorusUrl: "歌單1/《过火》张信哲 副歌.mp3",
+        allowChorusHint: true,
+        options: ["過火 - 張信哲", "愛如潮水 - 張信哲", "信仰 - 張信哲", "別怕我傷心 - 張信哲"],
+        answer: 0,
+        hintText: "提示：情歌王子張信哲代表作，描寫對於感情包容過度反而造成傷害的委屈。",
+        knowledgeCard: {
+          title: "清亮嗓音與苦情敘事的完美結合",
+          content: "張信哲以極具辨識度且細膩清亮的嗓音，將《過火》中對愛情的寬容、無奈與心碎詮釋得淋漓盡致，是 90 年代華語抒情情歌的極致範本。"
+        }
+      },
+      {
+        id: 5,
+        difficulty: "★★☆☆☆ 經典搖滾",
+        audioMainUrl: "歌單1/《单身情歌》林志炫 前奏.mp3",
+        audioChorusUrl: "歌單1/《单身情歌》林志炫 副歌.mp3",
+        allowChorusHint: true,
+        options: ["單身情歌 - 林志炫", "蒙娜麗莎的眼淚 - 林志炫", "離人 - 林志炫", "散了吧 - 林志炫"],
+        answer: 0,
+        hintText: "提示：美聲歌王林志炫 1999 年作品，號召所有單身的人勇敢尋找愛。",
+        knowledgeCard: {
+          title: "美聲技巧與流行搖滾的突破",
+          content: "《單身情歌》擺脫了林志炫以往較為溫柔抒情的風格，融入流行搖滾元素，以其教科書等級的高音聲樂技巧，唱出了對單身族群的安慰與鼓舞。"
+        }
+      },
+      {
+        id: 6,
+        difficulty: "★☆☆☆☆ 神曲必答",
+        audioMainUrl: "歌單1/《朋友》周華健 前奏.mp3",
+        audioChorusUrl: "歌單1/《朋友》周華健 副歌.mp3",
+        allowChorusHint: true,
+        options: ["朋友 - 周華健", "讓我歡喜讓我憂 - 周華健", "花心 - 周華健", "愛相隨 - 周華健"],
+        answer: 0,
+        hintText: "提示：『朋友一生一起走，那些日子不再有』，唱頌友誼與情義的國民歌曲。",
+        knowledgeCard: {
+          title: "國民歌王與情義文化的經典符號",
+          content: "由劉思銘作詞、劉志宏作曲，周華健以豪爽溫暖的聲線，將朋友間的相知相惜與離合悲歡表現得無比動人，成為華語社會各類聚會必唱的代表作。"
+        }
+      },
+      {
+        id: 7,
+        difficulty: "★☆☆☆☆ 神曲必答",
+        audioMainUrl: "歌單1/《挪威的森林》伍佰 前奏.mp3",
+        audioChorusUrl: "歌單1/《挪威的森林》伍佰 副歌.mp3",
+        allowChorusHint: true,
+        options: ["挪威的森林 - 伍佰", "浪人情歌 - 伍佰", "痛哭的人 - 伍佰", "鋼鐵男子 - 伍佰"],
+        answer: 0,
+        hintText: "提示：台灣 Live 搖滾教父伍佰 1996 年代表作，創作靈感來自村上春樹同名小說。",
+        knowledgeCard: {
+          title: "台式搖滾詩人與文學意象的對話",
+          content: "伍佰 & China Blue 以精湛的電吉他 Solo 與狂放不羈的現場演唱風格，將文學小說中孤獨與內心世界的隱喻，轉化為狂野又迷人的台式搖滾經典。"
+        }
+      },
+      {
+        id: 8,
+        difficulty: "★☆☆☆☆ 神曲必答",
+        audioMainUrl: "歌單1/張學友：《吻別》前奏.mp3",
+        audioChorusUrl: "歌單1/張學友：《吻別》副歌.mp3",
+        allowChorusHint: true,
+        options: ["吻別 - 張學友", "祝福 - 張學友", "情網 - 張學友", "一千個傷心的理由 - 張學友"],
+        answer: 0,
+        hintText: "提示：歌神張學友 1993 年發行的代表作，曾打破台灣與亞洲多項唱片銷售紀錄。",
+        knowledgeCard: {
+          title: "90 年代華語唱片工業的銷量神話",
+          content: "由殷文琦作曲、何啟弘填詞的《吻別》，融合了深刻的二胡線索與西洋流行樂編曲，全球銷量突破數百萬張，更是 90 年代流行音樂工業的巔峰巨作。"
+        }
+      }
+    ]
+  }
+};
+
+// ----------------------------------------------------
+// 2. 全域狀態與變數
+// ----------------------------------------------------
+let gameState = 'LANDING';
+let showRuleModal = false;
+
+let vinylAngle = 0;
+let soundFile = null;
+let currentSoundId = 0;
+let fft;
+
+let landingButtons = [];
+let menuButtons = [];
+let quizButtons = [];
+let hintButtons = [];
+let modalCloseBtn = null;
+let restartButton = null;
+let gameOverButtons = [];
+let nextQuestionBtn = null;
+
+let currentCategoryKey = null;
+let currentCategory = null;
+let currentQuiz = [];
+let currentQuestion = 0;
+let isAnswered = false;
+let feedbackMessage = "";
+
+let isTextHintUsed = false;
+let isFiftyFiftyUsed = false;
+let isChorusHintUsed = false;
+let activeHintText = "";
+
+let currentCorrectIndex = 0;
+
+const MAX_TIME = 20;
+let timeRemaining = MAX_TIME;
+let timerStartMillis = 0;
+let isTimerStarted = false;
+let timePenalty = 0;
+let totalScore = 0;
+
+// 防誤觸轉場保護鎖
+let quizStartTime = 0;
+
+// ----------------------------------------------------
+// 3. 洗牌演算法 (Fisher-Yates Shuffle)
+// ----------------------------------------------------
+function shuffleArray(array) {
+  let arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ----------------------------------------------------
+// 4. p5.js 主循環
+// ----------------------------------------------------
+function setup() {
+  let canvas = createCanvas(720, 560);
+  canvas.parent('game-container');
+  
+  fft = new p5.FFT(0.8, 32);
+  setupLandingPage();
+}
+
+function draw() {
+  background(13, 13, 18);
+
+  if (gameState === 'LANDING') {
+    drawLandingPage();
+  } else if (gameState === 'MENU') {
+    drawCategoryMenu();
+  } else if (gameState === 'QUIZ') {
+    updateTimer();
+    drawQuizScreen();
+  } else if (gameState === 'GAMEOVER') {
+    drawGameOverScreen();
+  }
+
+  if (showRuleModal) {
+    drawRuleModalOverlay();
+  }
+}
+
+// ----------------------------------------------------
+// 5. 首頁主介面
+// ----------------------------------------------------
+function setupLandingPage() {
+  gameState = 'LANDING';
+  clearAllButtons();
+
+  let startBtn = createButton('🚀 開始探索');
+  startBtn.size(220, 48);
+  startBtn.position(width / 2 - 230, 450);
+  stylePrimaryButton(startBtn);
+  startBtn.mousePressed(() => {
+    getAudioContext().resume();
+    setupCategoryMenu();
+  });
+  landingButtons.push(startBtn);
+
+  let ruleBtn = createButton('📖 遊戲說明');
+  ruleBtn.size(220, 48);
+  ruleBtn.position(width / 2 + 10, 450);
+  styleSecondaryButton(ruleBtn);
+  ruleBtn.mousePressed(() => {
+    showRuleModal = true;
+    toggleLandingButtons(false);
+    createModalCloseButton();
+  });
+  landingButtons.push(ruleBtn);
+}
+
+function drawLandingPage() {
+  textAlign(CENTER);
+  fill(255);
+  textSize(32);
+  textStyle(BOLD);
+  text("SoundQuest 韻律解密", width / 2, 85);
+
+  fill(160, 175, 200);
+  textSize(14);
+  textStyle(NORMAL);
+  text("看得到、聽得到、玩得下去 — 多感官音樂猜謎與沉浸式學習系統", width / 2, 118);
+
+  drawVinylRecord(width / 2, 270, 200);
+
+  fill(100, 110, 130);
+  textSize(12);
+  text("建議搭配耳機或揚聲器獲得最佳多媒體體驗", width / 2, 530);
+}
+
+function drawVinylRecord(x, y, size) {
+  push();
+  translate(x, y);
+  vinylAngle += 0.015;
+  rotate(vinylAngle);
+
+  fill(20, 20, 25);
+  stroke(40);
+  strokeWeight(2);
+  ellipse(0, 0, size, size);
+
+  noFill();
+  stroke(35);
+  strokeWeight(1);
+  ellipse(0, 0, size * 0.85, size * 0.85);
+  ellipse(0, 0, size * 0.70, size * 0.70);
+  ellipse(0, 0, size * 0.55, size * 0.55);
+
+  fill(220, 60, 80);
+  noStroke();
+  ellipse(0, 0, size * 0.35, size * 0.35);
+
+  fill(13, 13, 18);
+  ellipse(0, 0, size * 0.08, size * 0.08);
+  pop();
+
+  push();
+  translate(x + size * 0.45, y - size * 0.65);
+  stroke(180);
+  strokeWeight(3);
+  line(0, 0, -30, 60);
+  line(-30, 60, -45, 95);
+  fill(220);
+  noStroke();
+  rect(-50, 95, 10, 15, 2);
+  pop();
+}
+
+function drawRuleModalOverlay() {
+  fill(0, 0, 0, 200);
+  rect(0, 0, width, height);
+
+  push();
+  fill(22, 26, 36);
+  stroke(60, 80, 120);
+  strokeWeight(2);
+  rect(80, 70, 560, 410, 12);
+
+  noStroke();
+  fill(255, 215, 0);
+  textAlign(CENTER);
+  textSize(20);
+  textStyle(BOLD);
+  text("📖 遊戲機制與學習規則", width / 2, 110);
+
+  textAlign(LEFT, TOP);
+  fill(220);
+  textSize(14);
+  textStyle(NORMAL);
+  let startY = 150;
+  let lineHeight = 34;
+
+  text("1. 🎧 隨機抽題：每輪隨機挑選 4 首歌曲，選項位置同步隨機洗牌！", 110, startY);
+  text("2. ⏱️ 動態評分：點擊播放後開始 20 秒倒數，作答越快得分越高。", 110, startY + lineHeight);
+  text("3. 💡 多重提示：可使用「歌詞線索」、「50/50刪錯」或「🔥 解鎖副歌」。", 110, startY + lineHeight * 2);
+  text("4. 🧠 知識解鎖：答題後會顯示樂理/文化卡，看完再手動點按跳下一題！", 110, startY + lineHeight * 3);
+
+  fill(140, 160, 190);
+  textSize(12);
+  text("「讓每一次的測試，都成為一場有價值的音樂探索。」", 110, startY + lineHeight * 4.5);
+  pop();
+}
+
+function createModalCloseButton() {
+  modalCloseBtn = createButton('關閉說明');
+  modalCloseBtn.size(140, 38);
+  modalCloseBtn.position(width / 2 - 70, 420);
+  stylePrimaryButton(modalCloseBtn);
+  modalCloseBtn.mousePressed(() => {
+    showRuleModal = false;
+    modalCloseBtn.remove();
+    toggleLandingButtons(true);
+  });
+}
+
+function toggleLandingButtons(visible) {
+  landingButtons.forEach(btn => btn.style('display', visible ? 'block' : 'none'));
+}
+
+// ----------------------------------------------------
+// 6. 年代選單 (MENU)
+// ----------------------------------------------------
+function setupCategoryMenu() {
+  gameState = 'MENU';
+  clearAllButtons();
+
+  let keys = Object.keys(quizCategories);
+  let startY = 220;
+
+  keys.forEach((key, index) => {
+    let cat = quizCategories[key];
+    let btn = createButton(cat.title);
+    btn.size(380, 50);
+    btn.position(width / 2 - 190, startY + index * 70);
+    stylePrimaryButton(btn);
+    btn.mousePressed(() => startQuiz(key));
+    menuButtons.push(btn);
+  });
+}
+
+function drawCategoryMenu() {
+  textAlign(CENTER);
+  fill(255);
+  textSize(26);
+  text("🎵 請選擇主題年代", width / 2, 110);
+  
+  textSize(14);
+  fill(160, 175, 200);
+  text("選擇您想挑戰的音樂時代，開啟探索之旅：", width / 2, 150);
+}
+
+// ----------------------------------------------------
+// 7. 測驗與 FFT 視覺化 (QUIZ)
+// ----------------------------------------------------
+function startQuiz(categoryKey) {
+  clearAllButtons();
+  stopCurrentSound();
+  
+  isTimerStarted = false;
+  quizStartTime = millis(); // ◄◄◄ 記錄進入測驗的時間點（防穿透誤觸）
+
+  currentCategoryKey = categoryKey;
+  currentCategory = quizCategories[categoryKey];
+  
+  let shuffledAll = shuffleArray(currentCategory.questions);
+  currentQuiz = shuffledAll.slice(0, min(4, shuffledAll.length));
+  
+  currentQuestion = 0;
+  totalScore = 0;
+  gameState = 'QUIZ';
+  
+  loadQuestion();
+}
+
+function loadQuestion() {
+  clearQuizButtons();
+  if (nextQuestionBtn) {
+    nextQuestionBtn.remove();
+    nextQuestionBtn = null;
+  }
+
+  isAnswered = false;
+  isTimerStarted = false;
+  timePenalty = 0;
+  isTextHintUsed = false;
+  isFiftyFiftyUsed = false;
+  isChorusHintUsed = false;
+  activeHintText = "";
+
+  timeRemaining = MAX_TIME;
+  feedbackMessage = "請點擊中央音樂鈕播放試聽，開始試聽與倒數計分！";
+
+  stopCurrentSound();
+
+  createOptionButtons();
+  createHintButtons();
+}
+
+function stopCurrentSound() {
+  currentSoundId++;
+  if (soundFile) {
+    soundFile.stop();
+    soundFile = null;
+  }
+}
+
+function updateTimer() {
+  if (isTimerStarted && !isAnswered) {
+    let elapsed = (millis() - timerStartMillis) / 1000;
+    timeRemaining = max(0, MAX_TIME - elapsed - timePenalty);
+
+    if (timeRemaining <= 0) {
+      handleTimeOut();
+    }
+  } else if (!isTimerStarted && !isAnswered) {
+    timeRemaining = max(0, MAX_TIME - timePenalty);
+  }
+}
+
+function drawQuizScreen() {
+  drawHeaderUI();
+  drawSpectrumCircle();
+
+  if (isTextHintUsed && !isAnswered) {
+    drawHintBox();
+  }
+
+  if (isAnswered) {
+    drawKnowledgeCard();
+  }
+}
+
+function drawHeaderUI() {
+  let q = currentQuiz[currentQuestion];
+  textAlign(CENTER);
+  fill(255);
+  textSize(18);
+  text(`【${currentCategory.title}】 第 ${currentQuestion + 1} / ${currentQuiz.length} 題  [${q.difficulty}]`, width / 2, 35);
+
+  textSize(14);
+  fill(255, 215, 0);
+  text(`總得分：${totalScore}`, width / 2 - 220, 68);
+  
+  fill(timeRemaining < 5 ? '#ff4d4d' : '#4d94ff');
+  let timeText = isTimerStarted ? `⏱️ 剩餘時間：${timeRemaining.toFixed(1)} 秒` : `⏱️ 等待播放音樂...`;
+  text(timeText, width / 2 + 220, 68);
+
+  noFill();
+  stroke(60);
+  rect(width / 2 - 150, 60, 300, 8, 4);
+  fill(timeRemaining < 5 ? '#ff4d4d' : '#4d94ff');
+  noStroke();
+  let barWidth = map(timeRemaining, 0, MAX_TIME, 0, 300);
+  rect(width / 2 - 150, 60, barWidth, 8, 4);
+
+  textSize(14);
+  fill(isAnswered ? '#66ff66' : '#cccccc');
+  text(feedbackMessage, width / 2, 98);
+}
+
+function drawSpectrumCircle() {
+  let spectrum = fft.analyze();
+  
+  push();
+  translate(width / 2, 215);
+  noFill();
+  strokeWeight(3);
+  
+  beginShape();
+  for (let i = 0; i < spectrum.length; i++) {
+    let angle = map(i, 0, spectrum.length, 0, TWO_PI);
+    let amp = spectrum[i];
+    let r = map(amp, 0, 255, 45, 100);
+    let x = r * cos(angle);
+    let y = r * sin(angle);
+    
+    colorMode(HSB);
+    stroke(map(i, 0, spectrum.length, 0, 360), 80, 100);
+    line(0, 0, x, y);
+  }
+  endShape(CLOSE);
+  
+  colorMode(RGB);
+  fill(30, 30, 45);
+  stroke(255);
+  ellipse(0, 0, 80, 80);
+  fill(255);
+  noStroke();
+  textSize(13);
+  textAlign(CENTER, CENTER);
+  let statusText = soundFile && soundFile.isPlaying() ? (isChorusHintUsed ? "副歌中..." : "播放中...") : "點擊播放";
+  text(statusText, 0, 0);
+  pop();
+}
+
+function drawHintBox() {
+  push();
+  fill(40, 35, 20, 230);
+  stroke(255, 215, 0);
+  strokeWeight(1.5);
+  rect(100, 115, 520, 45, 8);
+
+  noStroke();
+  fill(255, 230, 120);
+  textAlign(CENTER, CENTER);
+  textSize(13);
+  text(`🔍 ${activeHintText}`, width / 2, 137);
+  pop();
+}
+
+function drawKnowledgeCard() {
+  let card = currentQuiz[currentQuestion].knowledgeCard;
+  
+  push();
+  fill(24, 32, 48, 245);
+  stroke(70, 130, 240);
+  strokeWeight(2);
+  rect(50, 100, 620, 95, 10);
+
+  noStroke();
+  fill(255, 215, 0);
+  textAlign(LEFT, TOP);
+  textSize(14);
+  textStyle(BOLD);
+  text(`💡 知識解鎖：${card.title}`, 70, 112);
+
+  fill(220);
+  textSize(12.5);
+  textStyle(NORMAL);
+  textWrap(CHAR);
+  text(card.content, 70, 136, 580, 52);
+  pop();
+}
+
+function createOptionButtons() {
+  let q = currentQuiz[currentQuestion];
+  let startY = 380;
+
+  let correctAnswerText = q.options[q.answer];
+  let shuffledOptions = shuffleArray(q.options);
+  currentCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
+
+  for (let i = 0; i < shuffledOptions.length; i++) {
+    let btn = createButton(shuffledOptions[i]);
+    btn.size(290, 42);
+    let posX = (i % 2 === 0) ? width / 2 - 300 : width / 2 + 10;
+    let posY = startY + Math.floor(i / 2) * 52;
+    btn.position(posX, posY);
+    styleOptionButton(btn);
+    
+    btn.mousePressed(() => checkAnswer(i));
+    quizButtons.push(btn);
+  }
+}
+
+function createHintButtons() {
+  let q = currentQuiz[currentQuestion];
+
+  let textBtn = createButton('💡 歌詞/背景線索 (-3秒)');
+  textBtn.size(190, 35);
+  textBtn.position(width / 2 - 300, 325);
+  styleHintButton(textBtn);
+  textBtn.mousePressed(useTextHint);
+  hintButtons.push(textBtn);
+
+  let fiftyBtn = createButton('✂️ 刪除兩個錯項 (-5秒)');
+  fiftyBtn.size(190, 35);
+  fiftyBtn.position(width / 2 - 95, 325);
+  styleHintButton(fiftyBtn);
+  fiftyBtn.mousePressed(useFiftyFifty);
+  hintButtons.push(fiftyBtn);
+
+  let chorusBtn = createButton(q.allowChorusHint ? '🔥 切換高潮副歌 (-5秒)' : '🔒 本題禁止切換副歌');
+  chorusBtn.size(190, 35);
+  chorusBtn.position(width / 2 + 110, 325);
+  styleHintButton(chorusBtn);
+
+  if (!q.allowChorusHint) {
+    chorusBtn.attribute('disabled', 'true');
+    chorusBtn.style('opacity', '0.4');
+    chorusBtn.style('cursor', 'not-allowed');
+  } else {
+    chorusBtn.mousePressed(useChorusHint);
+  }
+  hintButtons.push(chorusBtn);
+}
+
+function useTextHint() {
+  if (isTextHintUsed || isAnswered) return;
+  timePenalty += 3;
+  isTextHintUsed = true;
+  activeHintText = currentQuiz[currentQuestion].hintText;
+  
+  hintButtons[0].attribute('disabled', 'true');
+  hintButtons[0].style('opacity', '0.4');
+  feedbackMessage = "已使用文字線索提示！（扣除 3 秒）";
+}
+
+function useFiftyFifty() {
+  if (isFiftyFiftyUsed || isAnswered) return;
+  timePenalty += 5;
+  isFiftyFiftyUsed = true;
+
+  let wrongIndices = [];
+  for (let i = 0; i < 4; i++) {
+    if (i !== currentCorrectIndex) wrongIndices.push(i);
+  }
+
+  wrongIndices.sort(() => Math.random() - 0.5);
+  let disabledCount = 0;
+  for (let idx of wrongIndices) {
+    if (disabledCount < 2) {
+      quizButtons[idx].attribute('disabled', 'true');
+      quizButtons[idx].style('background-color', '#1a1a22');
+      quizButtons[idx].style('color', '#555566');
+      quizButtons[idx].style('border-color', '#222233');
+      quizButtons[idx].style('text-decoration', 'line-through');
+      disabledCount++;
+    }
+  }
+
+  hintButtons[1].attribute('disabled', 'true');
+  hintButtons[1].style('opacity', '0.4');
+  feedbackMessage = "已刪除兩個錯誤選項！（扣除 5 秒）";
+}
+
+function useChorusHint() {
+  let q = currentQuiz[currentQuestion];
+  if (isChorusHintUsed || isAnswered || !q.allowChorusHint) return;
+
+  timePenalty += 5;
+  isChorusHintUsed = true;
+
+  stopCurrentSound();
+  let thisSoundId = ++currentSoundId;
+
+  feedbackMessage = "🎵 正在載入高潮副歌音軌...";
+  
+  soundFile = loadSound(
+    q.audioChorusUrl,
+    () => {
+      if (thisSoundId === currentSoundId) {
+        soundFile.loop();
+        feedbackMessage = "🔥 已解鎖高潮副歌音軌！（扣除 5 秒）";
+      }
+    },
+    (err) => {
+      if (thisSoundId === currentSoundId) {
+        console.error("副歌載入失敗：", err);
+        feedbackMessage = "⚠️ 副歌音軌載入失敗，請檢查檔案名稱或網路！";
+      }
+    }
+  );
+
+  hintButtons[2].attribute('disabled', 'true');
+  hintButtons[2].style('opacity', '0.4');
+}
+
+function checkAnswer(selectedIndex) {
+  if (isAnswered) return;
+
+  if (selectedIndex === currentCorrectIndex) {
+    let scoreGained = Math.round(500 + (timeRemaining / MAX_TIME) * 500);
+    totalScore += scoreGained;
+    feedbackMessage = `🎉 答對了！獲得 ${scoreGained} 分！閱讀完知識卡後點擊下一題。`;
+  } else {
+    feedbackMessage = `❌ 猜錯囉！閱讀完知識卡後點擊下一題。`;
+  }
+
+  isAnswered = true;
+  disableQuizButtons();
+  createNextQuestionButton();
+}
+
+function handleTimeOut() {
+  if (isAnswered) return;
+  isAnswered = true;
+  feedbackMessage = "⏳ 時間到！未得分。閱讀完知識卡後點擊下一題。";
+  disableQuizButtons();
+  createNextQuestionButton();
+}
+
+function createNextQuestionButton() {
+  let isLast = (currentQuestion + 1 >= currentQuiz.length);
+  let btnText = isLast ? '🏆 查看結算成績 ➔' : '▶ 下一題 ➔';
+
+  nextQuestionBtn = createButton(btnText);
+  nextQuestionBtn.size(190, 40);
+  nextQuestionBtn.position(width / 2 + 110, 490);
+  styleNextQuestionButton(nextQuestionBtn);
+
+  nextQuestionBtn.mousePressed(() => {
+    if (isLast) {
+      setupGameOverScreen();
+    } else {
+      currentQuestion++;
+      loadQuestion();
+    }
+  });
+}
+
+function disableQuizButtons() {
+  quizButtons.forEach(btn => btn.attribute('disabled', 'true'));
+  hintButtons.forEach(btn => btn.attribute('disabled', 'true'));
+}
+
+function clearQuizButtons() {
+  quizButtons.forEach(btn => btn.remove());
+  quizButtons = [];
+  hintButtons.forEach(btn => btn.remove());
+  hintButtons = [];
+  if (nextQuestionBtn) {
+    nextQuestionBtn.remove();
+    nextQuestionBtn = null;
+  }
+}
+
+// ----------------------------------------------------
+// 8. 結算畫面 (GAMEOVER)
+// ----------------------------------------------------
+function setupGameOverScreen() {
+  gameState = 'GAMEOVER';
+  clearQuizButtons();
+  stopCurrentSound();
+
+  let retryBtn = createButton('🔄 再挑戰一次');
+  retryBtn.size(200, 48);
+  retryBtn.position(width / 2 - 210, height / 2 + 80);
+  stylePrimaryButton(retryBtn);
+  retryBtn.mousePressed(() => {
+    startQuiz(currentCategoryKey);
+  });
+  gameOverButtons.push(retryBtn);
+
+  let menuBtn = createButton('🎵 返回主題選單');
+  menuBtn.size(200, 48);
+  menuBtn.position(width / 2 + 10, height / 2 + 80);
+  styleSecondaryButton(menuBtn);
+  menuBtn.mousePressed(setupCategoryMenu);
+  gameOverButtons.push(menuBtn);
+}
+
+function drawGameOverScreen() {
+  textAlign(CENTER, CENTER);
+  fill(255);
+  textSize(30);
+  textStyle(BOLD);
+  text("🎉 恭喜完成主題測驗！", width / 2, height / 2 - 60);
+  
+  textSize(22);
+  fill(255, 215, 0);
+  text(`【${currentCategory.title}】最終總得分：${totalScore} 分`, width / 2, height / 2);
+  
+  textSize(15);
+  textStyle(NORMAL);
+  fill(160, 175, 200);
+  text("你已成功透過多媒體互動解鎖本年代的音樂知識！", width / 2, height / 2 + 40);
+}
+
+// ----------------------------------------------------
+// 9. 通用按鈕樣式與清理工具
+// ----------------------------------------------------
+function stylePrimaryButton(btn) {
+  btn.parent('game-container');
+  btn.style('background-color', '#3b82f6');
+  btn.style('color', '#ffffff');
+  btn.style('border', 'none');
+  btn.style('border-radius', '8px');
+  btn.style('font-size', '16px');
+  btn.style('font-weight', 'bold');
+  btn.style('cursor', 'pointer');
+}
+
+function styleSecondaryButton(btn) {
+  btn.parent('game-container');
+  btn.style('background-color', '#1e293b');
+  btn.style('color', '#cbd5e1');
+  btn.style('border', '1px solid #334155');
+  btn.style('border-radius', '8px');
+  btn.style('font-size', '16px');
+  btn.style('cursor', 'pointer');
+}
+
+function styleOptionButton(btn) {
+  btn.parent('game-container');
+  btn.style('background-color', '#2a2a38');
+  btn.style('color', '#ffffff');
+  btn.style('border', '1px solid #4a4a68');
+  btn.style('border-radius', '6px');
+  btn.style('font-size', '15px');
+  btn.style('cursor', 'pointer');
+}
+
+function styleHintButton(btn) {
+  btn.parent('game-container');
+  btn.style('background-color', '#1e293b');
+  btn.style('color', '#cbd5e1');
+  btn.style('border', '1px solid #334155');
+  btn.style('border-radius', '20px');
+  btn.style('font-size', '12px');
+  btn.style('cursor', 'pointer');
+}
+
+function styleNextQuestionButton(btn) {
+  btn.parent('game-container');
+  btn.style('background-color', '#22c55e');
+  btn.style('color', '#ffffff');
+  btn.style('border', 'none');
+  btn.style('border-radius', '8px');
+  btn.style('font-size', '15px');
+  btn.style('font-weight', 'bold');
+  btn.style('cursor', 'pointer');
+  btn.style('box-shadow', '0 4px 12px rgba(34, 197, 94, 0.4)');
+}
+
+function clearAllButtons() {
+  landingButtons.forEach(btn => btn.remove());
+  landingButtons = [];
+  menuButtons.forEach(btn => btn.remove());
+  menuButtons = [];
+  gameOverButtons.forEach(btn => btn.remove());
+  gameOverButtons = [];
+  clearQuizButtons();
+  if (modalCloseBtn) modalCloseBtn.remove();
+  if (restartButton) {
+    restartButton.remove();
+    restartButton = null;
+  }
+}
+
+// ◄◄◄ 畫布點擊事件防誤觸處理
+function mousePressed() {
+  if (gameState !== 'QUIZ' || showRuleModal) return;
+
+  // ◄◄◄ 關鍵修復：進入測驗未滿 0.3 秒忽略點擊，阻止按選單時的穿透事件！
+  if (millis() - quizStartTime < 300) return;
+
+  let d = dist(mouseX, mouseY, width / 2, 215);
+  if (d < 40) {
+    if (!soundFile) {
+      let q = currentQuiz[currentQuestion];
+      let urlToPlay = isChorusHintUsed ? q.audioChorusUrl : q.audioMainUrl;
+      
+      let thisSoundId = ++currentSoundId;
+      feedbackMessage = "🎵 正在載入音訊中...";
+
+      soundFile = loadSound(
+        urlToPlay,
+        () => {
+          if (thisSoundId === currentSoundId) {
+            soundFile.loop();
+            feedbackMessage = "▶️ 音樂播放中...";
+            if (!isTimerStarted) {
+              isTimerStarted = true;
+              timerStartMillis = millis();
+            }
+          }
+        },
+        (err) => {
+          if (thisSoundId === currentSoundId) {
+            console.error("音樂載入失敗：", err);
+            feedbackMessage = "⚠️ 音訊檔載入失敗，請檢查檔名或路徑！";
+          }
+        }
+      );
+    } else {
+      if (soundFile.isPlaying()) {
+        soundFile.pause();
+        feedbackMessage = "⏸️ 音樂已暫停";
+      } else {
+        soundFile.play();
+        feedbackMessage = "▶️ 音樂播放中...";
+        if (!isTimerStarted) {
+          isTimerStarted = true;
+          timerStartMillis = millis();
+        }
+      }
+    }
+  }
+}
+</script>
+
+</body>
+</html>
